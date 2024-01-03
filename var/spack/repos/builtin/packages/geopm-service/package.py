@@ -112,6 +112,11 @@ class GeopmService(AutotoolsPackage):
     def autoreconf(self, spec, prefix):
         bash = which("bash")
         with working_dir("service"):
+            if not spec.version.isdevelop():
+                # Required to workaround missing VERSION files
+                # from GitHub generated source tarballs
+                with open('VERSION_OVERRIDE', 'w') as fd:
+                    fd.write(f'{spec.version}')
             bash("./autogen.sh")
 
     def configure_args(self):
