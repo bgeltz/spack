@@ -24,6 +24,7 @@ class GeopmService(AutotoolsPackage):
 
     homepage = "https://geopm.github.io"
     git = "https://github.com/geopm/geopm.git"
+    url="https://github.com/geopm/geopm/tarball/v3.0.1"
 
     maintainers("bgeltz", "cmcantalupo")
     license("BSD-3-Clause")
@@ -32,7 +33,6 @@ class GeopmService(AutotoolsPackage):
     version("develop", branch="dev", get_full_repo=True)
     version(
         "3.0.1",
-        url="https://github.com/geopm/geopm/tarball/v3.0.1",
         sha256="32ba1948de58815ee055470dcdea64593d1113a6cad70ce00ab0286c127f8234",
     )
 
@@ -88,9 +88,9 @@ class GeopmService(AutotoolsPackage):
     depends_on("py-sphinx-tabs@3.3.1:", type="build", when="+docs")
     depends_on("py-pygments@2.13.0:", type="build", when="+docs")
 
-    # Other Python dependencies
-    depends_on("python@3.6:3")
-    depends_on("py-dasbus@1.6.0:", type=("build", "run"), when="+systemd")
+    # Other Python dependencies - from service/setup.py
+    depends_on("python@3.6:3", type=("build", "run"))
+    depends_on("py-dasbus@1.6.0:", type=("build", "run"))
     depends_on("py-cffi@1.14.5:", type="run")
     depends_on("py-psutil@5.8.0:", type="run")
     depends_on("py-jsonschema@3.2.0:", type="run")
@@ -104,6 +104,8 @@ class GeopmService(AutotoolsPackage):
     depends_on("liburing", when="+liburing")
     depends_on("oneapi-level-zero", when="+levelzero")
     depends_on("cuda", when="+nvml")
+
+    extends("python")
 
     configure_directory = "service"
 
@@ -137,12 +139,10 @@ class GeopmService(AutotoolsPackage):
         return args
 
     def setup_run_environment(self, env):
+        # Required to ensure geopmdpy can load
+        # libgeopmd.so.2 via CFFI
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib
         env.prepend_path("LD_LIBRARY_PATH", lib_dir)
-
-        python_version = self.spec["python"].version.up_to(2)
-        python_inst_dir = join_path(lib_dir, "python{0}".format(python_version), "site-packages")
-        env.prepend_path("PYTHONPATH", python_inst_dir)
