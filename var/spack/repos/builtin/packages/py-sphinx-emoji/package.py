@@ -15,6 +15,6 @@ class PySphinxEmoji(PythonPackage):
 
     version("0.2.0", sha256="27861d1dd7c6570f5e63020dac9a687263f7481f6d5d6409eb31ecebcc804e4c")
 
-    depends_on("python@3.6:3", type=("build", "run"))
+    depends_on("python@3.4:3", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-sphinx@2.1:", type=("build", "run"))
+    depends_on("py-sphinx@1.8:", type=("build", "run"))
