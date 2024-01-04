@@ -37,6 +37,7 @@ class GeopmService(AutotoolsPackage):
     )
 
     variant("debug", default=False, description="Enable debug")
+    variant("coverage", default=False, description="Enable test coverage generation; enables debug")
     variant("docs", default=True, description="Create man pages with Sphinx")
     variant(
         "systemd",
@@ -91,10 +92,10 @@ class GeopmService(AutotoolsPackage):
     # Other Python dependencies - from service/setup.py
     depends_on("python@3.6:3", type=("build", "run"))
     depends_on("py-dasbus@1.6.0:", type=("build", "run"))
-    depends_on("py-cffi@1.14.5:", type="run")
-    depends_on("py-psutil@5.8.0:", type="run")
-    depends_on("py-jsonschema@3.2.0:", type="run")
-    depends_on("py-pyyaml@6.0:", type="run")
+    depends_on("py-cffi@1.14.5:", type=("build", "run"))
+    depends_on("py-psutil@5.8.0:", type=("build", "run"))
+    depends_on("py-jsonschema@3.2.0:", type=("build", "run"))
+    depends_on("py-pyyaml@6.0:", type=("build", "run"))
     depends_on("py-setuptools@53.0.0:", type="build")
 
     # Other dependencies
@@ -108,6 +109,9 @@ class GeopmService(AutotoolsPackage):
     extends("python")
 
     configure_directory = "service"
+
+    with when("+coverage"):
+        build_targets = ["all", "coverage"]
 
     def autoreconf(self, spec, prefix):
         bash = which("bash")
@@ -126,6 +130,7 @@ class GeopmService(AutotoolsPackage):
         ]
 
         args += self.enable_or_disable("debug")
+        args += self.enable_or_disable("coverage")
         args += self.enable_or_disable("docs")
         args += self.enable_or_disable("systemd")
         args += self.enable_or_disable("liburing")
