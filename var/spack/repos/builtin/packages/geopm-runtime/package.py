@@ -34,6 +34,7 @@ class GeopmRuntime(AutotoolsPackage):
     variant("ompt", default=True, description="Use OpenMP Tools Interface")
     variant("gnu-ld", default=False, description="Assume C compiler uses gnu-ld")
     variant("intel-mkl", default=True, description="Build with Intel MKL support")
+    variant("checkprogs", default=False, description="Build unit and integration tests (requires --keep-stage)")
 
     conflicts("%gcc@:7.2", msg="Requires C++17 support")
     conflicts("%clang@:4", msg="Requires C++17 support")
@@ -61,6 +62,7 @@ class GeopmRuntime(AutotoolsPackage):
 
     # Other Python dependencies - from scripts/setup.py
     depends_on("python@3.6:3", type=("build", "run"))
+    depends_on("py-setuptools@53.0.0:", type="build")
     depends_on("py-cffi@1.14.5:", type="run")
     depends_on("py-natsort@8.2.0:", type="run")
     depends_on("py-numpy@1.19.5:", type="run")
@@ -68,7 +70,7 @@ class GeopmRuntime(AutotoolsPackage):
     depends_on("py-tables@3.7.0:", type="run")
     depends_on("py-psutil@5.8.0:", type="run")
     depends_on("py-pyyaml@6.0:", type="run")
-    depends_on("py-setuptools@53.0.0:", type="build")
+    depends_on("py-docutils@0.18:", type="run", when="+checkprogs")
 
     # Other dependencies
     for ver in ["3.0.1", "develop"]:
@@ -78,11 +80,20 @@ class GeopmRuntime(AutotoolsPackage):
     depends_on("unzip")
     depends_on("mpi@2.2:", when="+mpi")
     depends_on("libelf")
+    depends_on("numactl", type="run", when="+checkprogs")
+    depends_on("stress-ng", type="run", when="+checkprogs")
 
     # Intel dependencies
     depends_on("intel-oneapi-mkl%oneapi", when="+intel-mkl")
 
     extends("python")
+
+    @property
+    def install_targets(self):
+        target = ["install"]
+        if "+checkprogs" in self.spec:
+            target += ["checkprogs"]
+        return target
 
     def autoreconf(self, spec, prefix):
         bash = which("bash")
@@ -121,3 +132,7 @@ class GeopmRuntime(AutotoolsPackage):
         else:
             lib_dir = self.prefix.lib
         env.prepend_path("LD_LIBRARY_PATH", lib_dir)
+
+        if "+checkprogs" in self.spec:
+            env.set("GEOPM_SOURCE", self.stage.source_path) # Use with --keep-stage
+        env.set("GEOPM_INSTALL", self.prefix)
