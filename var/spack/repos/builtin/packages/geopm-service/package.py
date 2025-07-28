@@ -68,6 +68,7 @@ class GeopmService(AutotoolsPackage):
 
     patch("nvml-v3.0.1.patch", when="@3.0.1 +nvml")
     patch("nvml-v3.1+.patch", when="@3.1: +nvml")
+    patch("libtool.patch", when="@3.2")
 
     # Autotools dependencies
     depends_on("automake", type="build")
